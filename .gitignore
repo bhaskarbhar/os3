@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv
+venv/
+ENV/
+env/
+venv.bak/
+env.bak/
+
+# Project Specific
+*.db
+*.bin
+*.json
+!package.json
+!tsconfig.json
+!pyproject.toml
+report.txt
+scan.txt
+flask_score.json
+flask_score_fresh.json
+flask_score_final.json
+requests_score_fresh.json
+
+# VS Code Extension
+packages/vscode-os3/node_modules/
+packages/vscode-os3/out/
+*.vsix
+
+# OS
+.DS_Store
+Thumbs.db

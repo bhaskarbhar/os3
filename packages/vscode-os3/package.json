@@ -1,0 +1,65 @@
+{
+    "name": "vscode-os3",
+    "displayName": "OS³ Security",
+    "description": "Open-Source Security Score (OS³) - Real-time supply chain security for PyPI, NPM, and Maven.",
+    "version": "0.1.0",
+    "publisher": "os3-team",
+    "engines": {
+        "vscode": "^1.70.0"
+    },
+    "categories": [
+        "Security",
+        "Linters",
+        "Programming Languages"
+    ],
+    "main": "./out/extension.js",
+    "activationEvents": [
+        "onLanguage:python",
+        "onLanguage:javascript",
+        "onLanguage:typescript",
+        "onLanguage:json"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "os3.scan",
+                "title": "OS³: Scan Dependencies"
+            },
+            {
+                "command": "os3.sync",
+                "title": "OS³: Sync Vulnerability Cache"
+            }
+        ],
+        "configuration": {
+            "title": "OS³ Security",
+            "properties": {
+                "os3.warnIfScoreBelow": {
+                    "type": "integer",
+                    "default": 70,
+                    "description": "Show a warning in the editor if a package score is below this threshold."
+                },
+                "os3.errorIfScoreBelow": {
+                    "type": "integer",
+                    "default": 40,
+                    "description": "Show an error in the editor if a package score is below this threshold."
+                },
+                "os3.cliPath": {
+                    "type": "string",
+                    "default": "os3",
+                    "description": "Path to the os3 CLI executable (default is 'os3')."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "build": "tsc -p ./",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.70.0",
+        "@types/node": "^16.11.7",
+        "typescript": "^4.4.4"
+    }
+}

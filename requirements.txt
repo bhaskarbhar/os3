@@ -1,0 +1,6 @@
+requests==2.31.0
+flask>=2.0
+django
+urllib3<1.26
+unknown-package-12345
+pyyaml==5.1
