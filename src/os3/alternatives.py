@@ -130,7 +130,7 @@ def get_alternatives(
             
         try:
             # Audit the candidate (non-refreshing to keep it fast)
-            alt_data = engine.score_package(ecosystem, cand, None, force_refresh=False)
+            alt_data = engine.score_package(ecosystem, cand, None, force_refresh=False, skip_alternatives=True)
             alt_score = alt_data["score"]
             
             # Filter: Significantly better (+10) and safe risk

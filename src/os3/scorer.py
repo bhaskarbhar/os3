@@ -30,7 +30,7 @@ class ScoringEngine:
             'provenance': 0.05
         }
         
-    def score_package(self, ecosystem: str = 'pypi', name: str = None, version: str | None = None, force_refresh: bool = False) -> dict:
+    def score_package(self, ecosystem: str = 'pypi', name: str = None, version: str | None = None, force_refresh: bool = False, skip_alternatives: bool = False) -> dict:
         """Score a package's security health using real data with offline fallback."""
         if not name:
             return None
@@ -335,8 +335,9 @@ class ScoringEngine:
         }
         
         # Alternatives logic
-        from os3 import alternatives
-        result["alternatives"] = alternatives.get_alternatives(ecosystem, name, final_score, version, engine=self, current_data=result)
+        if not skip_alternatives:
+            from os3 import alternatives
+            result["alternatives"] = alternatives.get_alternatives(ecosystem, name, final_score, version, engine=self, current_data=result)
             
         cache.cache_score(ecosystem, name, version or "latest", result)
         return result
