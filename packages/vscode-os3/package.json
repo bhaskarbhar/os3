@@ -4,11 +4,11 @@
     "description": "Open-Source Security Score (OS³) - Real-time supply chain security for PyPI, NPM, and Maven.",
     "version": "0.1.0",
     "publisher": "os3-team",
+    "license": "Apache-2.0",
     "engines": {
         "vscode": "^1.70.0"
     },
     "categories": [
-        "Security",
         "Linters",
         "Programming Languages"
     ],

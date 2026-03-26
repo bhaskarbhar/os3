@@ -101,4 +101,10 @@ OS³ stores its configuration and encrypted cache in your user home directory:
 - **APIs**: OSV.dev, PyPI JSON API, NPM Registry/Downloads, Maven Central Solr API, deps.dev.
 
 ---
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+---
 *Built with ❤️ by the OS³ Team.*
