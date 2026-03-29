@@ -17,6 +17,7 @@ dependencies = [
     "requests>=2.31.0",
     "pip-requirements-parser>=32.0.1",
     "rapidfuzz>=3.0.0",
+    "textual>=0.40.0",
 ]
 
 [project.scripts]

@@ -4,3 +4,4 @@ django
 urllib3<1.26
 unknown-package-12345
 pyyaml==5.1
+textual>=0.40.0

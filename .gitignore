@@ -53,3 +53,4 @@ packages/vscode-os3/out/
 # OS
 .DS_Store
 Thumbs.db
+.os3/

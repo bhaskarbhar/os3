@@ -18,6 +18,7 @@ import requests
 import subprocess
 import time
 import sys
+from datetime import datetime
 from pathlib import Path
 from os3.config import ensure_config
 
@@ -740,6 +741,15 @@ def status():
         panel_content += f"  - {eco.upper()}: {count}\n"
         
     console.print(Panel(panel_content, title="[bold blue]OS³ Cache Status[/bold blue]", border_style="blue", expand=False))
+
+@app.command()
+def tui():
+    """
+    🖥️ [bold magenta]Launch the OS³ Terminal User Interface.[/bold magenta]
+    """
+    from os3.tui import OS3Tui
+    app_tui = OS3Tui()
+    app_tui.run()
 
 @app.command()
 def version():
