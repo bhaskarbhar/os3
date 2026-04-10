@@ -2,9 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import * as path from 'path';
 
-/**
- * OS3 Extension: Real-time supply chain security for PyPI, NPM, and Maven.
- */
+// ---------------- TYPES ----------------
 
 interface OS3Alternative {
     package: string;
@@ -22,235 +20,235 @@ interface OS3Report {
     vulns: string[];
 }
 
+// ---------------- ACTIVATE ----------------
+
 export function activate(context: vscode.ExtensionContext) {
-    const diagnosticCollection = vscode.languages.createDiagnosticCollection('os3-security');
-    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = "$(shield) OS³: Ready";
-    statusBarItem.show();
+    console.log("OS3 Extension Activated");
 
-    // 1. Hover Provider
-    const hoverProvider = vscode.languages.registerHoverProvider(
-        [{ language: 'python' }, { language: 'javascript' }, { language: 'typescript' }, { language: 'json' }],
+    const diagnostics = vscode.languages.createDiagnosticCollection('os3');
+    const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+
+    statusBar.text = "🛡 OS3 Ready";
+    statusBar.show();
+
+    // Hover Provider
+    const hover = vscode.languages.registerHoverProvider(
+        ['javascript', 'typescript', 'python', 'json'],
         {
-            async provideHover(document, position, token) {
+            async provideHover(document, position) {
                 const line = document.lineAt(position.line).text;
-                const pkgName = extractPackageName(line, document.languageId);
+                const pkg = extractPackageName(line, document.languageId);
 
-                if (pkgName) {
-                    const report = await getOS3Score(pkgName, document.languageId);
-                    if (report) {
-                        return createHoverMessage(pkgName, report);
-                    }
-                }
-                return null;
+                if (!pkg) return null;
+
+                const report = await getOS3Score(pkg, document.languageId);
+                if (!report) return null;
+
+                return createHover(pkg, report);
             }
         }
     );
 
-    // 2. Continuous Scanning (Debounced)
-    let timeout: NodeJS.Timeout | undefined = undefined;
-    const triggerScan = (document: vscode.TextDocument) => {
-        if (timeout) {
-            clearTimeout(timeout);
-        }
-        timeout = setTimeout(() => scanDocument(document, diagnosticCollection), 500);
+    // Debounced scan
+    let timer: NodeJS.Timeout | undefined;
+
+    const triggerScan = (doc: vscode.TextDocument) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => scanDocument(doc, diagnostics), 400);
     };
 
     context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(triggerScan),
         vscode.workspace.onDidChangeTextDocument(e => triggerScan(e.document)),
-        vscode.workspace.onDidOpenTextDocument(doc => triggerScan(doc)),
         vscode.workspace.onDidSaveTextDocument(doc => {
-            if (path.basename(doc.fileName) === 'package.json' || path.basename(doc.fileName) === 'requirements.txt' || path.basename(doc.fileName) === 'pom.xml') {
+            const name = path.basename(doc.fileName);
+            if (['package.json', 'requirements.txt', 'pom.xml'].includes(name)) {
                 runFullScan(doc.fileName);
             }
         })
     );
 
-    // Initial scan for all open editors
-    vscode.window.visibleTextEditors.forEach(editor => triggerScan(editor.document));
+    vscode.window.visibleTextEditors.forEach(e => triggerScan(e.document));
 
-    // 3. Code Actions (Quick Fixes)
-    const codeActionProvider = vscode.languages.registerCodeActionsProvider(
-        [{ language: 'python' }, { language: 'javascript' }, { language: 'typescript' }, { language: 'json' }],
-        {
-            provideCodeActions(document, range, context, token) {
-                const actions: vscode.CodeAction[] = [];
-                for (const diagnostic of context.diagnostics) {
-                    if (diagnostic.source === 'OS³') {
-                        const pkgName = diagnostic.code as string;
-
-                        // Action: Suppress
-                        const suppressAction = new vscode.CodeAction(`OS³: Suppress ${pkgName}`, vscode.CodeActionKind.QuickFix);
-                        suppressAction.command = {
-                            command: 'os3.suppress',
-                            title: 'Suppress Package',
-                            arguments: [pkgName, getEcosystem(document.languageId)]
-                        };
-                        actions.push(suppressAction);
-                    }
-                }
-                return actions;
-            }
-        }
-    );
-
-    // 4. Commands
+    // Commands
     context.subscriptions.push(
         vscode.commands.registerCommand('os3.sync', async () => {
-            statusBarItem.text = "$(sync~spin) OS³: Syncing...";
+            statusBar.text = "🔄 OS3 Syncing...";
             try {
-                await executeOS3Command('sync');
-                vscode.window.showInformationMessage('OS³: Vulnerability cache synced.');
-                statusBarItem.text = "$(shield) OS³: Synced";
-            } catch (err) {
-                vscode.window.showErrorMessage('OS³ Sync failed. Ensure CLI is installed.');
-                statusBarItem.text = "$(warning) OS³: Error";
-            }
-        }),
-
-        vscode.commands.registerCommand('os3.suppress', async (pkg: string, eco: string) => {
-            const reason = await vscode.window.showInputBox({ prompt: `Reason for suppressing ${pkg}?`, value: 'Developer reviewed, safe' });
-            if (reason) {
-                await executeOS3Command(`suppress add ${pkg} --ecosystem ${eco} --reason "${reason}" --all`);
-                vscode.window.showInformationMessage(`OS³: ${pkg} suppressed.`);
+                await execCLI('sync');
+                vscode.window.showInformationMessage("OS3 Synced");
+                statusBar.text = "🛡 OS3 Synced";
+            } catch (e: any) {
+                vscode.window.showErrorMessage("Sync failed: " + e.message);
+                statusBar.text = "⚠ OS3 Error";
             }
         })
     );
 
-    context.subscriptions.push(hoverProvider, codeActionProvider, diagnosticCollection, statusBarItem);
+    context.subscriptions.push(hover, diagnostics, statusBar);
 }
 
-// --- Logic Helpers ---
+// ---------------- SCAN ----------------
 
-async function scanDocument(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
-    if (!['python', 'javascript', 'typescript', 'json'].includes(document.languageId)) return;
+async function scanDocument(doc: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
+    if (!['javascript', 'typescript', 'python', 'json'].includes(doc.languageId)) return;
 
-    const diagnostics: vscode.Diagnostic[] = [];
-    const text = document.getText();
-    const lines = text.split('\n');
+    const lines = doc.getText().split('\n');
+    const results: vscode.Diagnostic[] = [];
 
     const config = vscode.workspace.getConfiguration('os3');
-    const warnThreshold = config.get<number>('warnIfScoreBelow', 70);
-    const errorThreshold = config.get<number>('errorIfScoreBelow', 40);
+    const warn = config.get<number>('warnIfScoreBelow', 70);
+    const error = config.get<number>('errorIfScoreBelow', 40);
 
     for (let i = 0; i < lines.length; i++) {
-        const pkgName = extractPackageName(lines[i], document.languageId);
-        if (pkgName) {
-            const report = await getOS3Score(pkgName, document.languageId);
-            if (report && report.score < warnThreshold) {
-                const range = new vscode.Range(i, 0, i, lines[i].length);
-                const severity = report.score < errorThreshold ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
+        const pkg = extractPackageName(lines[i], doc.languageId);
+        if (!pkg) continue;
 
-                const diag = new vscode.Diagnostic(
-                    range,
-                    `OS³ Security: ${pkgName} is High Risk (${report.score}/100). ${report.explanations[0]}`,
-                    severity
+        try {
+            const report = await getOS3Score(pkg, doc.languageId);
+            if (!report) continue;
+
+            if (report.score < warn) {
+                const severity =
+                    report.score < error
+                        ? vscode.DiagnosticSeverity.Error
+                        : vscode.DiagnosticSeverity.Warning;
+
+                results.push(
+                    new vscode.Diagnostic(
+                        new vscode.Range(i, 0, i, lines[i].length),
+                        `OS3: ${pkg} risk ${report.score}/100 → ${report.explanations[0] || ''}`,
+                        severity
+                    )
                 );
-                diag.source = 'OS³';
-                diag.code = pkgName;
-                diagnostics.push(diag);
             }
+        } catch (e) {
+            console.error("Scan error:", e);
         }
     }
-    collection.set(document.uri, diagnostics);
+
+    collection.set(doc.uri, results);
 }
 
-function extractPackageName(line: string, langId: string): string | null {
-    if (langId === 'python') {
-        const reg = /(?:from|import)\s+([a-zA-Z0-9_-]+)/;
-        const match = line.match(reg);
-        return match ? match[1] : null;
-    } else if (langId === 'javascript' || langId === 'typescript') {
-        const regImport = /import\s+.*\s+from\s+['"]([a-zA-Z0-9_-@/]+)['"]/;
-        const regRequire = /require\(['"]([a-zA-Z0-9_-@/]+)['"]\)/;
-        const match = line.match(regImport) || line.match(regRequire);
-        return match ? match[1] : null;
-    } else if (langId === 'json') {
-        // package.json dependencies
-        const reg = /"([^"]+)"\s*:\s*"[^"]+"/;
-        const match = line.match(reg);
-        return match ? match[1] : null;
+// ---------------- PARSING ----------------
+
+function extractPackageName(line: string, lang: string): string | null {
+    if (lang === 'python') {
+        const m = line.match(/(?:from|import)\s+([a-zA-Z0-9_-]+)/);
+        return m?.[1] || null;
     }
+
+    if (lang === 'javascript' || lang === 'typescript') {
+        const m =
+            line.match(/from\s+['"]([^'"]+)['"]/) ||
+            line.match(/require\(['"]([^'"]+)['"]\)/);
+        return m?.[1] || null;
+    }
+
+    if (lang === 'json') {
+        const m = line.match(/"dependencies"\s*:/);
+        if (m) return null; // skip root
+
+        const dep = line.match(/"([^"]+)"\s*:\s*"[^"]+"/);
+        return dep?.[1] || null;
+    }
+
     return null;
 }
 
-function getEcosystem(langId: string): string {
-    if (langId === 'python') return 'pypi';
-    return 'npm'; // Default for JS/TS/JSON
+function ecosystem(lang: string) {
+    return lang === 'python' ? 'pypi' : 'npm';
 }
 
-async function getOS3Score(pkg: string, langId: string): Promise<OS3Report | null> {
-    const ecosystem = getEcosystem(langId);
+// ---------------- OS3 LOGIC ----------------
+
+async function getOS3Score(pkg: string, lang: string): Promise<OS3Report | null> {
     try {
-        const output = await executeOS3Command(`score ${pkg} --ecosystem ${ecosystem} --json`);
-        return JSON.parse(output);
-    } catch (e) {
+        const out = await execCLI(`score ${pkg} --ecosystem ${ecosystem(lang)} --json`);
+        return JSON.parse(out);
+    } catch (e: any) {
+        console.error("OS3 Error:", e.message);
         return null;
     }
 }
 
-function createHoverMessage(pkg: string, report: OS3Report): vscode.Hover {
-    const color = report.score >= 80 ? 'green' : report.score >= 55 ? 'orange' : 'red';
-    const badge = `**Score: [${report.score}/100]** (${report.risk_level})`;
+// ---------------- CLI EXEC ----------------
 
-    const markdown = new vscode.MarkdownString();
-    markdown.appendMarkdown(`### OS³ Security: ${pkg}\n\n`);
-    markdown.appendMarkdown(`${badge}\n\n`);
+function execCLI(args: string): Promise<string> {
+    const config = vscode.workspace.getConfiguration('os3');
+    const cli = config.get<string>('cliPath', 'os3');
 
-    markdown.appendMarkdown(`**Audit Results:**\n`);
-    report.explanations.slice(0, 3).forEach(exp => {
-        markdown.appendMarkdown(`- ${exp}\n`);
+    const cmd = `${cli} ${args}`;
+    console.log("Executing:", cmd);
+
+    return new Promise((resolve, reject) => {
+        exec(cmd, (err, stdout, stderr) => {
+            console.log("STDOUT:", stdout);
+            console.log("STDERR:", stderr);
+
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            const jsonStart = stdout.indexOf('{');
+            if (jsonStart === -1) {
+                reject(new Error("Invalid JSON output"));
+                return;
+            }
+
+            resolve(stdout.substring(jsonStart));
+        });
+    });
+}
+
+// ---------------- HOVER ----------------
+
+function createHover(pkg: string, report: OS3Report): vscode.Hover {
+    const md = new vscode.MarkdownString();
+
+    md.appendMarkdown(`### 🛡 OS3: ${pkg}\n\n`);
+    md.appendMarkdown(`**Score:** ${report.score}/100 (${report.risk_level})\n\n`);
+
+    md.appendMarkdown(`**Findings:**\n`);
+    report.explanations.slice(0, 3).forEach(e => {
+        md.appendMarkdown(`- ${e}\n`);
     });
 
-    if (report.alternatives && report.alternatives.length > 0) {
-        markdown.appendMarkdown(`\n**Safer Alternatives:**\n\n`);
-        markdown.appendMarkdown(`| Package | Score | Improvement |\n`);
-        markdown.appendMarkdown(`| :--- | :--- | :--- |\n`);
-        report.alternatives.slice(0, 3).forEach(alt => {
-            markdown.appendMarkdown(`| ${alt.package} | ${alt.score} | ${alt.delta} |\n`);
+    if (report.alternatives?.length) {
+        md.appendMarkdown(`\n**Alternatives:**\n`);
+        report.alternatives.slice(0, 3).forEach(a => {
+            md.appendMarkdown(`- ${a.package} (${a.score})\n`);
         });
     }
 
-    markdown.isTrusted = true;
-    return new vscode.Hover(markdown);
+    md.isTrusted = true;
+    return new vscode.Hover(md);
 }
 
-function runFullScan(filePath: string) {
-    vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        title: "OS³: Scanning project artifacts...",
-        cancellable: false
-    }, async (progress) => {
-        try {
-            const output = await executeOS3Command(`scan ${filePath} --json`);
-            const data = JSON.parse(output);
-            if (data.summary && data.summary.high_risk_found) {
-                vscode.window.showWarningMessage(`OS³: Found ${data.summary.risk_counts.HIGH} high-risk dependencies in ${path.basename(filePath)}!`);
-            }
-        } catch (e) {
-            // Error handling
-        }
-    });
-}
+// ---------------- FULL SCAN ----------------
 
-function executeOS3Command(args: string): Promise<string> {
-    const config = vscode.workspace.getConfiguration('os3');
-    const cliPath = config.get<string>('cliPath', 'os3');
+function runFullScan(file: string) {
+    vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: "OS3 Scanning...",
+        },
+        async () => {
+            try {
+                const out = await execCLI(`scan ${file} --json`);
+                const data = JSON.parse(out);
 
-    return new Promise((resolve, reject) => {
-        exec(`${cliPath} ${args}`, (error, stdout, stderr) => {
-            if (error) {
-                // If the error contains legitimate JSON, we might still want to parse it (some errors return partial results)
-                if (stdout && stdout.startsWith('{')) {
-                    resolve(stdout);
-                    return;
+                if (data?.summary?.high_risk_found) {
+                    vscode.window.showWarningMessage(
+                        `OS3: ${data.summary.risk_counts.HIGH} high-risk deps found`
+                    );
                 }
-                reject(error);
-                return;
+            } catch (e) {
+                vscode.window.showErrorMessage("Scan failed");
             }
-            resolve(stdout);
-        });
-    });
+        }
+    );
 }
 
-export function deactivate() { }
+export function deactivate() {}
