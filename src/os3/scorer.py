@@ -585,7 +585,7 @@ class ScoringEngine:
         # License detection
         raw_lic = None
         if ecosystem.lower() == 'pypi':
-            raw_lic = info.get("license")
+            raw_lic = info.get("license") or info.get("license_expression")
             if isinstance(raw_lic, str):
                 raw_lic = raw_lic.strip()
                 if len(raw_lic) > 64 or "\n" in raw_lic:
@@ -595,6 +595,12 @@ class ScoringEngine:
                         raw_lic = license_classifiers[-1].split("::")[-1].strip()
                     else:
                         raw_lic = raw_lic.splitlines()[0].strip()
+            # Fallback to classifiers if no license found
+            if not raw_lic:
+                classifiers = info.get("classifiers", []) or []
+                license_classifiers = [c for c in classifiers if c.startswith("License ::")]
+                if license_classifiers:
+                    raw_lic = license_classifiers[-1].split("::")[-1].strip()
         elif ecosystem.lower() == 'npm':
             l_data = info.get("license") or info.get("licenses")
             if isinstance(l_data, list):
@@ -689,7 +695,9 @@ class ScoringEngine:
         # Alternatives logic
         if not skip_alternatives:
             from os3 import alternatives
-            result["alternatives"] = alternatives.get_alternatives(ecosystem, name, final_score, version, engine=self, current_data=result)
+            # For Maven, use resolved canonical name if available
+            alt_name = resolved_maven_name if ecosystem.lower() == 'maven' and resolved_maven_name != name else name
+            result["alternatives"] = alternatives.get_alternatives(ecosystem, alt_name, final_score, version, engine=self, current_data=result)
             
         cache.cache_score(ecosystem, name, version or "latest", result)
         return result

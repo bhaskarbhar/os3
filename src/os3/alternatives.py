@@ -24,7 +24,8 @@ NPM_POPULAR = [
     "playwright", "eslint", "prettier", "webpack", "vite", "rollup",
     "esbuild", "date-fns", "dayjs", "luxon", "next", "nuxt",
     "pinia", "redux", "tanstack-query", "swr", "tailwindcss",
-    "daisyui", "faker", "nanoid", "uuid", "dotenv", "zod",
+    "daisyui", "faker", "nanoid", "uuid", "dotenv", "body-parser",
+    "winston", "pino", "bunyan", "request", "moment",
 ]
 
 MAVEN_POPULAR = [
@@ -35,6 +36,7 @@ MAVEN_POPULAR = [
     "junit:junit", "org.junit.jupiter:junit-jupiter-api",
     "org.mockito:mockito-core", "org.assertj:assertj-core",
     "org.apache.logging.log4j:log4j-core", "org.apache.logging.log4j:log4j-api",
+    "org.json:json",
 ]
 
 # Curated candidates per category (expand initial popular lists)
@@ -45,7 +47,8 @@ CATEGORY_CANDIDATES = {
     "validation": ["pydantic", "zod", "joi", "marshmallow"],
     "utils": ["lodash-es", "ramda", "toolz"],
     "date-time": ["date-fns", "dayjs", "luxon", "pendulum"],
-    "logging": ["ch.qos.logback:logback-classic", "org.apache.logging.log4j:log4j-core", "loguru", "structlog"],
+    "logging": ["ch.qos.logback:logback-classic", "org.apache.logging.log4j:log4j-core", "org.apache.logging.log4j:log4j-api", "loguru", "structlog", "winston", "pino", "bunyan"],
+    "json": ["com.fasterxml.jackson.core:jackson-databind", "org.json:json", "gson", "json4s"],
 }
 
 # Map specific packages to categories for smarter lookup
@@ -61,8 +64,13 @@ CATEGORY_MAPPING = {
     "request": "http-client",
     "moment": "date-time",
     "lodash": "utils",
+    "winston": "logging",
+    "bunyan": "logging",
     # Maven
     "org.apache.logging.log4j:log4j-core": "logging",
+    "org.apache.logging.log4j:log4j-api": "logging",
+    "log4j": "logging",
+    "org.slf4j:slf4j-api": "logging",
 }
 
 # Exact high-confidence mappings
@@ -73,6 +81,11 @@ KNOWN_SWAPS = {
     "lodash": ["lodash-es"],
     "moment": ["date-fns", "dayjs"],
     "request": ["axios"],
+    "axios": ["undici"],
+    "winston": ["pino", "bunyan"],
+    "org.apache.logging.log4j:log4j-core": ["ch.qos.logback:logback-classic"],
+    "org.apache.logging.log4j:log4j-api": ["org.slf4j:slf4j-api"],
+    "log4j": ["ch.qos.logback:logback-classic"],
 }
 
 def get_alternatives(
