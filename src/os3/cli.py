@@ -168,6 +168,12 @@ def score(
         
         # 3.4 License
         lic = report_data.get("license_spdx", "Unknown")
+        if isinstance(lic, str):
+            lic = lic.strip()
+            if "\n" in lic:
+                lic = lic.splitlines()[0].strip()
+            if len(lic) > 60:
+                lic = lic[:57].rstrip() + "..."
         penalty_lic = 100 - breakdown.get("license_score", 100)
         # Use simple string check for OSI in explanations
         has_osi = any("OSI-approved" in str(e) for e in explanations)
