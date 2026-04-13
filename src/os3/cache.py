@@ -151,3 +151,14 @@ def get_cache_stats() -> dict:
         }
     finally:
         conn.close()
+
+def clear_all_cache():
+    """Clear all cached data."""
+    conn = _get_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM package_scores")
+        cursor.execute("DELETE FROM deps_dev_data")
+        conn.commit()
+    finally:
+        conn.close()

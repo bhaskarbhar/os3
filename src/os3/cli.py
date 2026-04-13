@@ -617,6 +617,39 @@ def sync(
 suppress_app = typer.Typer(help="🛡️ Manage security risk suppressions.")
 app.add_typer(suppress_app, name="suppress")
 
+# Cache command group
+cache_app = typer.Typer(help="💾 Manage the local package cache.")
+app.add_typer(cache_app, name="cache")
+
+@cache_app.command("clear")
+def cache_clear(
+    confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt."),
+):
+    """
+    🗑️ [bold red]Clear all cached package data.[/bold red]
+    
+    This will remove all cached scores and metadata, forcing fresh data on next requests.
+    """
+    if not confirm:
+        if not typer.confirm("Are you sure you want to clear all cached data? This cannot be undone."):
+            console.print("[dim]Operation cancelled.[/dim]")
+            return
+    
+    cache.clear_all_cache()
+    console.print("[success]Cache cleared successfully![/success]")
+
+@cache_app.command("refresh-all")
+def cache_refresh_all(
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output."),
+):
+    """
+    🔄 [bold green]Refresh all cached package data.[/bold green]
+    
+    This will update all cached packages with fresh data from registries.
+    Equivalent to running 'os3 sync --full'.
+    """
+    sync_module.sync_all(full=True, quiet=quiet)
+
 @suppress_app.command("add")
 def suppress_add(
     package: str = typer.Argument(..., help="Package name to suppress."),
