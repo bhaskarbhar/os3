@@ -42,6 +42,41 @@ class ScoringEngine:
             "compile": "Can compile arbitrary code for execution",
         }
         
+        # Safer alternatives for dangerous built-in modules
+        self.dangerous_module_alternatives = {
+            "pickle": [
+                {"package": "json", "score": 100, "why": "Safe standard library JSON serialization"},
+                {"package": "orjson", "score": 95, "why": "Fast, safe JSON library with type hints"},
+                {"package": "msgpack", "score": 90, "why": "Efficient binary serialization without RCE risks"},
+            ],
+            "subprocess": [
+                {"package": "sh", "score": 85, "why": "Safer subprocess wrapper with better error handling"},
+                {"package": "plumbum", "score": 80, "why": "Shell-like scripting with safety features"},
+            ],
+            "eval": [
+                {"package": "ast.literal_eval", "score": 100, "why": "Safe evaluation of literals only"},
+                {"package": " asteval", "score": 85, "why": "Restricted Python evaluator"},
+            ],
+            "exec": [
+                {"package": "importlib", "score": 100, "why": "Safe module importing"},
+                {"package": "runpy", "score": 95, "why": "Safe script execution"},
+            ],
+            "marshal": [
+                {"package": "json", "score": 100, "why": "Safe standard library JSON serialization"},
+                {"package": "pickle", "score": 35, "why": "Even pickle is safer than marshal"},
+            ],
+            "os": [
+                {"package": "pathlib", "score": 100, "why": "Modern path handling"},
+                {"package": "shutil", "score": 95, "why": "High-level file operations"},
+            ],
+            "__import__": [
+                {"package": "importlib", "score": 100, "why": "Safe module importing"},
+            ],
+            "compile": [
+                {"package": "ast", "score": 100, "why": "Safe AST parsing without execution"},
+            ],
+        }
+        
         # Scoring Weights (Total 1.0)
         self.weights = {
             'cve': 0.40,
@@ -101,6 +136,7 @@ class ScoringEngine:
                         # Check if this is a dangerous built-in module
                         if name.lower() in self.dangerous_modules:
                             danger_desc = self.dangerous_modules[name.lower()]
+                            alternatives = self.dangerous_module_alternatives.get(name.lower(), [])
                             return {
                                 "score": 35,
                                 "risk_level": "HIGH",
@@ -109,7 +145,7 @@ class ScoringEngine:
                                     "[red][WARN] While part of the standard library, this module can lead to critical vulnerabilities if misused.[/]",
                                     "[red][WARN] Avoid using in untrusted contexts or with untrusted data.[/]"
                                 ],
-                                "alternatives": [],
+                                "alternatives": alternatives,
                                 "vulns": [],
                                 "last_release": None,
                                 "source": "builtin-dangerous",
