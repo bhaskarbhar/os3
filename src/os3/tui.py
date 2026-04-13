@@ -323,7 +323,8 @@ class OS3Tui(App):
 
             audit_node = tree.add("[bold cyan]Agentic Journal Logs[/bold cyan]")
             for exp in explanations:
-                audit_node.add(Text(exp, style="italic"))
+                # Parse Rich markup tags from scorer explanations for proper colored output.
+                audit_node.add(Text.from_markup(exp, style="italic"))
 
             renderables.append(tree)
             renderables.append(Text(""))
@@ -369,7 +370,7 @@ class OS3Tui(App):
                 maint_node.add(f"Last Release: [cyan]{os3_data['last_release']}[/]")
             for exp in os3_data.get("explanations", []):
                 if any(w in exp.lower() for w in ["maintenance", "active", "abandonment"]):
-                    maint_node.add(Text(exp))
+                    maint_node.add(Text.from_markup(exp))
                     
             vulns = os3_data.get("vulns", [])
             vuln_node = os3_tree.add(f"Vulnerability Signals ([red]{len(vulns)}[/])")

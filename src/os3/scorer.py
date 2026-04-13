@@ -14,6 +14,7 @@ class ScoringEngine:
         self.npm_url = "https://registry.npmjs.org/{name}"
         self.npm_downloads_url = "https://api.npmjs.org/downloads/range/last-year/{name}"
         self.maven_search_url = "https://search.maven.org/solrsearch/select?q=g:\"{gid}\"+AND+a:\"{aid}\"&wt=json"
+        self.maven_artifact_search_url = "https://search.maven.org/solrsearch/select?q=a:\"{aid}\"&rows=20&wt=json"
         self.top_packages = [
             "requests", "flask", "django", "numpy", "pandas", "setuptools",
             "urllib3", "pytest", "aiohttp", "boto3", "pyyaml", "werkzeug",
@@ -166,6 +167,7 @@ class ScoringEngine:
         # 2. Try to fetch fresh data
         network_error = False
         vulns = []
+        resolved_maven_name = name
         try:
             # Check OSV
             osv_eco = ecosystem.upper() if ecosystem.lower() != 'maven' else 'Maven'
@@ -209,6 +211,8 @@ class ScoringEngine:
                     npm_response = requests.get(npm_api_url, timeout=5)
                     if npm_response.status_code == 200:
                         npm_data = npm_response.json()
+                        # Keep full npm metadata for package existence, license, and other signals.
+                        info = npm_data
                         times = npm_data.get("time", {})
                         if "modified" in times:
                             last_release_date = times["modified"]
@@ -230,8 +234,39 @@ class ScoringEngine:
                                 if "timestamp" in doc:
                                     ts = doc["timestamp"] / 1000.0
                                     last_release_date = datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+                                resolved_maven_name = f"{doc.get('g', gid)}:{doc.get('a', aid)}"
+                    else:
+                        # Artifact-only input fallback (e.g. "log4j-core")
+                        maven_res = requests.get(self.maven_artifact_search_url.format(aid=name), timeout=5)
+                        if maven_res.status_code == 200:
+                            docs = maven_res.json().get("response", {}).get("docs", [])
+                            # Prefer exact artifact matches if multiple docs exist
+                            exact_docs = [d for d in docs if str(d.get("a", "")).lower() == name.lower()]
+                            if exact_docs:
+                                # Pick the most recently updated artifact when available
+                                doc = sorted(exact_docs, key=lambda d: d.get("timestamp", 0), reverse=True)[0]
+                                info = doc
+                                gid = doc.get("g")
+                                aid = doc.get("a")
+                                if gid and aid:
+                                    resolved_maven_name = f"{gid}:{aid}"
+                                if "timestamp" in doc:
+                                    ts = doc["timestamp"] / 1000.0
+                                    last_release_date = datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
             except (requests.ConnectionError, requests.Timeout):
                 network_error = True
+            except Exception:
+                pass
+
+        # If Maven coordinates were resolved from artifact-only input, retry OSV with canonical name.
+        if ecosystem.lower() == 'maven' and resolved_maven_name != name and not vulns and not network_error:
+            try:
+                payload = {"package": {"name": resolved_maven_name, "ecosystem": "Maven"}}
+                if version:
+                    payload["version"] = version
+                response = requests.post(self.osv_url, json=payload, timeout=5)
+                if response.status_code == 200:
+                    vulns = response.json().get("vulns", [])
             except Exception:
                 pass
 
@@ -252,7 +287,7 @@ class ScoringEngine:
         elif ecosystem.lower() == 'npm':
             package_exists = bool(info and info.get("name"))
         elif ecosystem.lower() == 'maven':
-            package_exists = bool(info and info.get("id"))
+            package_exists = bool(info and (info.get("id") or (info.get("g") and info.get("a"))))
 
         if not package_exists and not network_error:
             # Package not found - HIGH RISK (possible typosquat/malicious)
