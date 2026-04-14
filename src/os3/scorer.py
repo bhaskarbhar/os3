@@ -23,6 +23,20 @@ class ScoringEngine:
             "pytorch", "keras", "pytest", "sphinx", "wheel"
         ]
         
+        # Top packages for typosquatting detection per ecosystem
+        self.top_packages_npm = [
+            "express", "lodash", "axios", "react", "vue", "next", "typescript", 
+            "jest", "webpack", "babel", "eslint", "prettier", "moment", "jquery",
+            "underscore", "async", "request", "bluebird", "chalk", "commander"
+        ]
+        
+        self.top_packages_maven = [
+            "spring-core", "guava", "commons-lang3", "jackson-databind", "slf4j-api",
+            "logback-classic", "hibernate-validator", "junit", "mockito-core", 
+            "assertj-core", "log4j-core", "jackson-core", "commons-io", "httpclient",
+            "commons-collections", "gson", "jackson-annotations", "validation-api"
+        ]
+        
         self.osi_licenses = {
             "MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "GPL-3.0", "LGPL-3.0", 
             "MPL-2.0", "ISC", "EPL-2.0", "Artistic-2.0", "AGPL-3.0", "Zlib", 
@@ -440,30 +454,60 @@ class ScoringEngine:
             else:
                 maintainer_score = min(40, maintainer_score)
                 explanations.append("[yellow][WARN] No maintainer metadata available (-10 pts).[/]")
+        elif ecosystem.lower() == 'npm':
+            maintainers = info.get("maintainers", [])
+            if maintainers and len(maintainers) > 0:
+                maintainer_score = min(100, maintainer_score + 10)
+                explanations.append("[green][OK] Maintainer metadata present (+10 pts).[/]")
+            else:
+                maintainer_score = min(40, maintainer_score)
+                explanations.append("[yellow][WARN] No maintainer metadata available (-10 pts).[/]")
 
         # 5.2.5 Typosquatting Detection (CRITICAL for supply chain security)
         provenance_score = 30  # Default provenance is low for unknown packages
-        if ecosystem.lower() == 'pypi':
-            # Basic heuristics for typosquatting detection
-            typosquat_risk = 0
-            if len(name) < 4:  # Very short names are suspicious
-                typosquat_risk += 25
-            if name.count('-') > 3 or name.count('_') > 3:  # Too many separators
-                typosquat_risk += 20
-            if any(char.isdigit() for char in name[-3:]):  # Numbers at end
-                typosquat_risk += 25
-            if name.endswith(('s', 'es', 'ed', 'ing', 'er', 'ly')) == False and len(name) > 6:
-                # Doesn't end with common English suffixes - possible typo
-                typosquat_risk += 15
+        
+        # Typosquatting detection for all ecosystems
+        typosquat_risk = 0
+        if len(name) < 4:  # Very short names are suspicious
+            typosquat_risk += 25
+        if name.count('-') > 3 or name.count('_') > 3:  # Too many separators
+            typosquat_risk += 20
+        if any(char.isdigit() for char in name[-3:]):  # Numbers at end
+            typosquat_risk += 25
+        if not name.endswith(('s', 'es', 'ed', 'ing', 'er', 'ly')) and len(name) > 6:
+            # Doesn't end with common English suffixes - possible typo
+            typosquat_risk += 15
 
-            close_match = difflib.get_close_matches(name.lower(), self.top_packages, n=1, cutoff=0.75)
-            if close_match and close_match[0] != name.lower():
+        # Check against ecosystem-specific popular packages
+        top_packages_list = []
+        if ecosystem.lower() == 'pypi':
+            top_packages_list = self.top_packages
+        elif ecosystem.lower() == 'npm':
+            top_packages_list = self.top_packages_npm
+        elif ecosystem.lower() == 'maven':
+            # For Maven, extract artifact name from group:artifact format
+            if ':' in name:
+                artifact_name = name.split(':')[-1]
+            else:
+                artifact_name = name
+            top_packages_list = [pkg.split(':')[-1] for pkg in self.top_packages_maven]
+            name_for_check = artifact_name
+        else:
+            name_for_check = name
+
+        if top_packages_list:
+            close_match = difflib.get_close_matches(
+                (name_for_check if ecosystem.lower() == 'maven' else name).lower(), 
+                [pkg.lower() for pkg in top_packages_list], 
+                n=1, cutoff=0.75
+            )
+            if close_match and close_match[0] != (name_for_check if ecosystem.lower() == 'maven' else name).lower():
                 typosquat_risk += 35
                 explanations.append(f"[red][WARN] Likely typosquat of popular package '{close_match[0]}' (-35 pts).[/]")
 
-            if typosquat_risk > 20:
-                provenance_score = max(0, provenance_score - typosquat_risk)
-                explanations.append(f"[red][WARN] Possible typosquatting pattern detected (-{typosquat_risk} pts).[/]")
+        if typosquat_risk > 20:
+            provenance_score = max(0, provenance_score - typosquat_risk)
+            explanations.append(f"[red][WARN] Possible typosquatting pattern detected (-{typosquat_risk} pts).[/]")
 
         # 5.3 Dependency Depth (0-100)
         depth_score = 100
@@ -561,20 +605,33 @@ class ScoringEngine:
             except:
                 pass
         elif ecosystem.lower() == 'pypi' and not network_error:
-            # PyPI popularity is opaque; use ecosystem trust and metadata heuristics
+            # PyPI popularity scoring - use available metadata
             is_popular = name.lower() in self.top_packages
             has_project_url = bool(info.get("project_urls") or info.get("home_page"))
             download_count = info.get("downloads", {}).get("last_month", 0) if isinstance(info.get("downloads"), dict) else 0
             
-            popularity_score = 85 if is_popular else 75 if has_project_url else 60
+            if is_popular:
+                popularity_score = 90
+                explanations.append("[green][OK] Well-established package in ecosystem (+0 pts).[/]")
+            elif has_project_url:
+                popularity_score = 75
+                explanations.append("[green][OK] Package has project presence (+0 pts).[/]")
+            elif download_count > 10000:
+                popularity_score = 80
+                explanations.append(f"[green][OK] Significant download count ({download_count}) (+0 pts).[/]")
+            else:
+                popularity_score = 60
+                explanations.append("[yellow][WARN] Limited public presence (-40 pts).[/]")
+        elif ecosystem.lower() == 'maven' and not network_error:
+            # Maven popularity scoring based on known popular packages and metadata
+            is_popular = any(pkg in (resolved_maven_name or name) for pkg in self.top_packages_maven)
             
             if is_popular:
-                explanations.append("[green][OK] Ecosystem trust: Package is well-established and widely used (+10 pts).[/]")
-                provenance_score = min(100, provenance_score + 40)  # Boost provenance for known packages
-            elif has_project_url:
-                explanations.append("[green][OK] Package has project URLs, indicating public presence (+0 pts).[/]")
+                popularity_score = 85
+                explanations.append("[green][OK] Well-established Maven package (+0 pts).[/]")
             else:
-                explanations.append("[yellow][WARN] Missing project URLs, low public traceability (-40 pts).[/]")
+                popularity_score = 70
+                explanations.append("[dim]Popularity analytics limited for Maven packages.[/]")
         else:
             explanations.append("[dim]Popularity analytics skipped or unavailable.[/]")
 
@@ -614,8 +671,28 @@ class ScoringEngine:
             else:
                 raw_lic = l_data
         elif ecosystem.lower() == 'maven':
-            # Handle list or single string in Maven search result (if any) or look for 'ec' field
-            raw_lic = ", ".join(info.get("ec", [])) if isinstance(info.get("ec"), list) else info.get("ec")
+            # Try to get license from Maven search result
+            raw_lic = info.get("license")
+            if not raw_lic:
+                # Fallback: infer license from group/artifact name patterns
+                full_name = resolved_maven_name or name
+                if ":" in full_name:
+                    group_id, artifact_id = full_name.split(":", 1)
+                else:
+                    group_id, artifact_id = "", full_name
+                
+                # Common license patterns
+                if group_id.startswith("org.apache.") or group_id.startswith("com.google.") or "apache" in group_id.lower():
+                    raw_lic = "Apache-2.0"
+                elif group_id.startswith("org.springframework"):
+                    raw_lic = "Apache-2.0"
+                elif "mit" in artifact_id.lower() or "bsd" in artifact_id.lower():
+                    raw_lic = "MIT" if "mit" in artifact_id.lower() else "BSD-3-Clause"
+                elif group_id.startswith("org.eclipse"):
+                    raw_lic = "EPL-2.0"
+                # If still no license, use packaging info as last resort (though it's not license)
+                if not raw_lic:
+                    raw_lic = ", ".join(info.get("ec", [])) if isinstance(info.get("ec"), list) else info.get("ec")
 
         if raw_lic:
             license_spdx = str(raw_lic)
