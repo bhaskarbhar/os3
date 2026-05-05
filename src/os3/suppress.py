@@ -74,6 +74,10 @@ def is_suppressed(ecosystem, package, version=None, cve_id=None):
     suppressions = load_suppressions()
     now = datetime.now().isoformat()
     
+    # Treat None version as "latest"
+    if version is None:
+        version = "latest"
+    
     for s in suppressions:
         # Check ecosystem and package name
         if s.get("ecosystem", "").lower() != ecosystem.lower():

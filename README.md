@@ -6,7 +6,7 @@ Built for the **Advanced Agentic Coding** era, OS³ integrates directly into you
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 - **Multi-Ecosystem Scoring**: Unified security signals for Python (PyPI), JavaScript (NPM), and Java (Maven).
 - **Composite Health Signals**:
@@ -21,7 +21,7 @@ Built for the **Advanced Agentic Coding** era, OS³ integrates directly into you
 
 ---
 
-## 🚀 CLI Setup & Installation
+## CLI Setup & Installation
 
 ### 1. Prerequisites
 - Python 3.9+
@@ -60,7 +60,7 @@ py -m pip install -e .
 
 ---
 
-## 💻 VS Code Extension Setup
+## VS Code Extension Setup
 
 The OS³ extension provides **intent-time security** by analyzing imports as you type.
 
@@ -85,7 +85,7 @@ Then, install the generated `.vsix` file in VS Code via **Extensions -> ... -> I
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 OS³ stores its configuration and encrypted cache in your user home directory:
 - **Cache**: `~/.cache/os3/cache.db` (SQLite, encrypted via Fernet)
@@ -94,7 +94,7 @@ OS³ stores its configuration and encrypted cache in your user home directory:
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend**: Python, Typer (CLI), Rich (TUI), SQLite (Cache), Fernet (Encryption).
 - **Frontend (IDE)**: TypeScript, VS Code Extension API.
@@ -102,7 +102,7 @@ OS³ stores its configuration and encrypted cache in your user home directory:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 

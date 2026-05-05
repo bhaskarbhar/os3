@@ -323,7 +323,7 @@ def scan(
                     delta = alt["score"] - score
                     color = "green" if alt["score"] >= 80 else "yellow"
                     node.add(
-                        f"[success]{alt['name']}[/success]  "
+                        f"[success]{alt['package']}[/success]  "
                         f"[bold green]+{delta} better[/]  "
                         f"[dim white]{alt['why'][:70]}{'…' if len(alt['why']) > 70 else ''}[/]  "
                         f"[italic cyan]({alt.get('smarter_signals', 'Data-backed')})[/]"
