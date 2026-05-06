@@ -1,4 +1,4 @@
-# OS³ (Open-Source Security Score) 🛡️
+# OS³ (Open-Source Security Score)
 
 **OS³** is a high-performance, intent-time security scoring engine designed to stop malicious and vulnerable open-source packages *before* they enter your supply chain. It provides data-saturated security audits for **PyPI, NPM, and Maven** ecosystems.
 
