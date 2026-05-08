@@ -332,7 +332,7 @@ class OS3Tui(App):
             # 3. Alternatives Table
             if alternatives:
                 table = Table(title="[bold blue]Data-Backed Recommendations[/bold blue]", show_header=True, header_style="bold blue", border_style="blue", expand=True)
-                table.add_column("Alternative", style="info", no_wrap=True)
+                table.add_column("Alternative", style="cyan", no_wrap=True)
                 table.add_column("Score Impact", justify="center")
                 table.add_column("Why this is suggested")
 
