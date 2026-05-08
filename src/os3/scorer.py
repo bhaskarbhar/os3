@@ -134,7 +134,7 @@ class ScoringEngine:
         # Check if this is a built-in Python module - BE MORE SPECIFIC
         if ecosystem.lower() == 'pypi':
             try:
-                import importlib
+                import importlib.util
                 import sys
                 spec = importlib.util.find_spec(name)
                 if spec and spec.origin:
@@ -142,7 +142,7 @@ class ScoringEngine:
                     # and not in site-packages (third-party installs)
                     is_stdlib = (
                         spec.origin and 
-                        'Python' in spec.origin and
+                        ('python' in spec.origin.lower() or 'lib' in spec.origin.lower()) and
                         'site-packages' not in spec.origin and
                         spec.origin.startswith(sys.base_prefix)
                     )

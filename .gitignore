@@ -38,19 +38,24 @@ os3_venv/
 !package.json
 !tsconfig.json
 !pyproject.toml
-report.txt
-scan.txt
-flask_score.json
-flask_score_fresh.json
-flask_score_final.json
-requests_score_fresh.json
+*report.txt
+*scan.txt
+*_score*.json
 
 # VS Code Extension
 packages/vscode-os3/node_modules/
 packages/vscode-os3/out/
 *.vsix
 
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+pytest_report.txt
+
 # OS
 .DS_Store
 Thumbs.db
 .os3/
+target/

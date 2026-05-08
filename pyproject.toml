@@ -18,6 +18,16 @@ dependencies = [
     "pip-requirements-parser>=32.0.1",
     "rapidfuzz>=3.0.0",
     "textual>=0.40.0",
+    "tomli>=1.2.0",
+    "tomli-w>=1.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+    "pytest-cov>=4.0.0",
+    "responses>=0.18.0",
 ]
 
 [project.scripts]
@@ -25,3 +35,8 @@ os3 = "os3.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/os3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "--cov=src/os3 --cov-report=term-missing"
