@@ -36,6 +36,8 @@ Detailed documentation for OS³ can be found below:
 - **[VS Code Extension](docs/vscode_extension.md)**: Setup and features for the VS Code integration.
 - **[Configuration](docs/configuration.md)**: Managing cache, suppressions, and settings.
 - **[Development](docs/development.md)**: Guidelines for contributing and running tests.
+- **[Contributing Guide](CONTRIBUTING.md)**: How to get involved with the project.
+
 
 ---
 
