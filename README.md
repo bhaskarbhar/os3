@@ -6,7 +6,7 @@ Built for the **Advanced Agentic Coding** era, OS³ integrates directly into you
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 Detailed documentation for OS³ can be found below:
 
