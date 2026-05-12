@@ -6,12 +6,33 @@ Built for the **Advanced Agentic Coding** era, OS³ integrates directly into you
 
 ---
 
+## 🚀 Quick Start & Installation
+
+### 1. Prerequisites
+- Python 3.9+
+- [Optional] Maven (for Java dependency depth calculation)
+- [Optional] Node.js (for NPM ecosystem support)
+
+### 2. Installation
+```bash
+git clone https://github.com/bhaskarbhar/os3.git
+cd os3
+py -m pip install -e .
+```
+
+### 3. Basic Commands
+- **Score a package**: `os3 score flask`
+- **Scan a project**: `os3 scan requirements.txt`
+- **Sync cache**: `os3 sync --full`
+
+---
+
 ## Documentation
 
 Detailed documentation for OS³ can be found below:
 
 - **[Core Features](docs/features.md)**: Explore the security signals and scoring logic.
-- **[CLI Installation & Usage](docs/installation.md)**: How to install and use the `os3` command-line tool.
+- **[Installation & CLI Deep Dive](docs/installation.md)**: Comprehensive installation and command reference.
 - **[VS Code Extension](docs/vscode_extension.md)**: Setup and features for the VS Code integration.
 - **[Configuration](docs/configuration.md)**: Managing cache, suppressions, and settings.
 - **[Development](docs/development.md)**: Guidelines for contributing and running tests.
