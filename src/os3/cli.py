@@ -40,7 +40,7 @@ console = Console(theme=custom_theme)
 
 app = typer.Typer(
     name="os3",
-    help="🛡️ [bold blue]Open-Source Security Score (OS3) CLI Tool[/bold blue]",
+    help="[bold blue]Open-Source Security Score (OS3) CLI Tool[/bold blue]",
     add_completion=False,
     rich_markup_mode="rich",
 )
@@ -70,7 +70,7 @@ def main(
     ),
 ):
     """
-    🛡️ [bold blue]Open-Source Security Score CLI[/bold blue]
+    [bold blue]Open-Source Security Score CLI[/bold blue]
 
     Evaluate and monitor the security health of open-source projects with style.
     """
@@ -90,7 +90,7 @@ def score(
     json_output: bool = typer.Option(False, "--json", help="Output results in JSON format."),
 ):
     """
-    📊 [bold green]Score a package's security health using real data.[/bold green]
+    [bold green]Score a package's security health using real data.[/bold green]
     """
     engine = scorer.ScoringEngine()
     
@@ -213,7 +213,7 @@ def scan(
     suppress_generate: bool = typer.Option(False, "--suppress-generate", "-sg", help="Interactively generate suppressions for high-risk items."),
 ):
     """
-    🔍 [bold cyan]Scan a dependency file for security risks.[/bold cyan]
+    [bold cyan]Scan a dependency file for security risks.[/bold cyan]
     """
     path = Path(file_path)
     if not path.exists():
@@ -263,7 +263,7 @@ def scan(
     if summary["high_risk_found"]:
         console.print(
             Panel(
-                "[bold]⚠️ CRITICAL: High-risk packages detected in your project![/]\n"
+                "[bold]CRITICAL: High-risk packages detected in your project![/]\n"
                 "Check the details below and consider updating or replacing them.",
                 style="on red",
                 expand=True
@@ -313,7 +313,7 @@ def scan(
     risky_pkgs = [r for r in results if "score_data" in r and (r["score_data"]["score"] < 70 or r["score_data"]["risk_level"] == "HIGH")]
     if risky_pkgs:
         console.print()
-        tree = Tree("[bold yellow]💡 Safer alternative suggestions[/bold yellow]", guide_style="yellow")
+        tree = Tree("[bold yellow]Safer alternative suggestions[/bold yellow]", guide_style="yellow")
         for r in risky_pkgs:
             recs = r.get("recommendations", [])
             score = r["score_data"]["score"]
@@ -367,7 +367,7 @@ def install(
     force_refresh: bool = typer.Option(False, "--force-refresh", help="Ignore cache for scoring"),
 ):
     """
-    📦 [bold yellow]Securely install packages with a pre-install security audit.[/bold yellow]
+    [bold yellow]Securely install packages with a pre-install security audit.[/bold yellow]
     Acts as a wrapper for [bold blue]pip install[/bold blue] but scores packages first.
     """
     # 1. Collect all packages to score
@@ -447,7 +447,7 @@ def install(
     summary_panel = Panel(
         f"Security Audit: [bold white]{len(results)} packages[/] | Avg Score: [bold]{avg_score:.1f}[/]\n"
         f"Risks Detected: [red]{len(high_risks)} HIGH[/], [yellow]{len(med_risks)} MEDIUM[/]",
-        title="[bold yellow]⚠️ OS³ Security Warning[/bold yellow]",
+        title="[bold yellow]OS³ Security Warning[/bold yellow]",
         border_style="yellow",
         expand=False
     )
@@ -476,7 +476,7 @@ def install(
             console.print(f"\n[bold yellow]Smarter Alternatives for {r['name']}:[/]")
             for alt in r["recommendations"]:
                 delta = alt['score'] - r['score_data']['score']
-                console.print(f"  ➜ [success]{alt['name']}[/success] (Score: {alt['score']} [green]+{delta}[/]) - {alt['why']}")
+                console.print(f"  -> [success]{alt['name']}[/success] (Score: {alt['score']} [green]+{delta}[/]) - {alt['why']}")
 
     if dry_run:
         console.print("\n[info]Dry run: Installation halted due to detected risks.[/info]")
@@ -518,7 +518,7 @@ def run_pip_install(args: list[str]):
     try:
         # We run as a subprocess and stream output
         subprocess.run(cmd, check=True)
-        console.print("\n[success]✨ Installation completed successfully.[/success]")
+        console.print("\n[success]Installation completed successfully.[/success]")
     except subprocess.CalledProcessError as e:
         console.print(f"\n[error]pip install failed with exit code {e.returncode}[/error]")
         raise typer.Exit(e.returncode)
@@ -530,7 +530,7 @@ def reasoning(
     force_refresh: bool = typer.Option(False, "--force-refresh", "-f", help="Ignore cache for scoring"),
 ):
     """
-    🧠 [bold info]Deep dive into the security reasoning and signals for a package.[/bold info]
+    [bold info]Deep dive into the security reasoning and signals for a package.[/bold info]
     Provides a granular breakdown of data points from OS3 and deps.dev Insights.
     """
     engine = scorer.ScoringEngine()
@@ -553,7 +553,7 @@ def reasoning(
     console.print(Panel(f"[bold blue]Deep Reasoning Audit:[/bold blue] [info]{package}[/info]", border_style="blue"))
 
     # 2. OS3 Signals (Maintenance & Vulns)
-    os3_tree = Tree("[bold magenta]🛡️ OS3 Internal Audit[/bold magenta]")
+    os3_tree = Tree("[bold magenta]OS3 Internal Audit[/bold magenta]")
     os_score = os3_data.get('score', 0)
     os3_tree.add(f"Score: [bold green]{os_score}/100[/]")
     os3_tree.add(f"Risk Level: [bold]{os3_data.get('risk_level', 'UNKNOWN')}[/]")
@@ -573,7 +573,7 @@ def reasoning(
     console.print()
 
     # 3. deps.dev Signals (Insights)
-    dd_tree = Tree("[bold cyan]🔍 Open Source Insights (deps.dev)[/bold cyan]")
+    dd_tree = Tree("[bold cyan]Open Source Insights (deps.dev)[/bold cyan]")
     if dd_score_info:
         dd_score, dd_exps = dd_score_info
         dd_tree.add(f"Data Significance: [bold green]High[/]")
@@ -609,16 +609,16 @@ def sync(
     quiet: bool = typer.Option(False, "--quiet", help="Suppress progress output."),
 ):
     """
-    🔄 [bold green]Synchronize vulnerabilities and refresh stale cache entries.[/bold green]
+    [bold green]Synchronize vulnerabilities and refresh stale cache entries.[/bold green]
     """
     sync_module.sync_all(full=full, quiet=quiet)
 
 # Suppress command group
-suppress_app = typer.Typer(help="🛡️ Manage security risk suppressions.")
+suppress_app = typer.Typer(help="Manage security risk suppressions.")
 app.add_typer(suppress_app, name="suppress")
 
 # Cache command group
-cache_app = typer.Typer(help="💾 Manage the local package cache.")
+cache_app = typer.Typer(help="Manage the local package cache.")
 app.add_typer(cache_app, name="cache")
 
 @cache_app.command("clear")
@@ -626,7 +626,7 @@ def cache_clear(
     confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt."),
 ):
     """
-    🗑️ [bold red]Clear all cached package data.[/bold red]
+    [bold red]Clear all cached package data.[/bold red]
     
     This will remove all cached scores and metadata, forcing fresh data on next requests.
     """
@@ -643,7 +643,7 @@ def cache_refresh_all(
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output."),
 ):
     """
-    🔄 [bold green]Refresh all cached package data.[/bold green]
+    [bold green]Refresh all cached package data.[/bold green]
     
     This will update all cached packages with fresh data from registries.
     Equivalent to running 'os3 sync --full'.
@@ -756,7 +756,7 @@ def suppress_generate(
 @app.command()
 def status():
     """
-    📊 [bold blue]Display current cache height and synchronization status.[/bold blue]
+    [bold blue]Display current cache height and synchronization status.[/bold blue]
     """
     stats = sync_module.get_status()
     
@@ -784,7 +784,7 @@ def status():
 @app.command()
 def tui():
     """
-    🖥️ [bold magenta]Launch the OS³ Terminal User Interface.[/bold magenta]
+    [bold magenta]Launch the OS³ Terminal User Interface.[/bold magenta]
     """
     from os3.tui import OS3Tui
     app_tui = OS3Tui()

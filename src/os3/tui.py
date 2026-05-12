@@ -141,7 +141,7 @@ class OS3Tui(App):
                     with TabPane("Score Dashboard", id="tab-score"):
                         with Vertical(classes="action-area"):
                             with Horizontal(classes="form-row"):
-                                yield Input(placeholder="📦 Package name (e.g. requests)", id="package-input", classes="stretch-input")
+                                yield Input(placeholder="Package name (e.g. requests)", id="package-input", classes="stretch-input")
                                 yield Input(value="pypi", placeholder="Ecosystem", id="ecosystem-input", classes="short-input")
                                 yield Button("Score", id="score-button", classes="action-button", variant="primary")
                                 yield Button("Reasoning", id="reasoning-button", classes="action-button")
@@ -241,7 +241,7 @@ class OS3Tui(App):
             
         report_container = self.query_one("#report-container", PackageReport)
         action = "Deep analyzing" if reasoning else "Auditing"
-        report_container.update(Panel(f"⏳ {action} [bold cyan]{package}[/bold cyan] in {ecosystem}...", border_style="cyan", padding=(1, 2)))
+        report_container.update(Panel(f"{action} [bold cyan]{package}[/bold cyan] in {ecosystem}...", border_style="cyan", padding=(1, 2)))
         
         self.run_score(package, ecosystem, reasoning)
 
@@ -268,7 +268,7 @@ class OS3Tui(App):
 
     def show_error(self, container_id: str, message: str) -> None:
         container = self.query_one(container_id)
-        container.update(Panel(f"❌ [bold red]Error:[/bold red] {message}", border_style="red", padding=(1, 2)))
+        container.update(Panel(f"[bold red]Error:[/bold red] {message}", border_style="red", padding=(1, 2)))
 
     def show_results(self, package: str, ecosystem: str, report_data: dict) -> None:
         try:
@@ -360,7 +360,7 @@ class OS3Tui(App):
             renderables.append(Text(""))
             
             # OS3 Signals
-            os3_tree = Tree("[bold magenta]🛡️ OS3 Internal Audit[/bold magenta]")
+            os3_tree = Tree("[bold magenta]OS3 Internal Audit[/bold magenta]")
             os_score = os3_data.get('score', 0)
             os3_tree.add(f"Score: [bold green]{os_score}/100[/]")
             os3_tree.add(f"Risk Level: [bold]{os3_data.get('risk_level', 'UNKNOWN')}[/]")
@@ -380,7 +380,7 @@ class OS3Tui(App):
             renderables.append(Text(""))
             
             # Deps Dev Signals
-            dd_tree = Tree("[bold cyan]🔍 Open Source Insights (deps.dev)[/bold cyan]")
+            dd_tree = Tree("[bold cyan]Open Source Insights (deps.dev)[/bold cyan]")
             if dd_score_info:
                 dd_score, dd_exps = dd_score_info
                 dd_tree.add(f"Data Significance: [bold green]High[/]")
@@ -440,7 +440,7 @@ class OS3Tui(App):
             return
             
         report = self.query_one("#scan-report-container", ScanReport)
-        report.update(Panel(f"⏳ Scanning file [bold cyan]{file_path}[/bold cyan]...", border_style="cyan"))
+        report.update(Panel(f"Scanning file [bold cyan]{file_path}[/bold cyan]...", border_style="cyan"))
         
         table = self.query_one("#scan-table", DataTable)
         table.clear()
@@ -463,7 +463,7 @@ class OS3Tui(App):
         results = scan_data.get("results", [])
         
         if not results:
-            report.update(Panel("❌ No valid packages found to scan.", border_style="red"))
+            report.update(Panel("No valid packages found to scan.", border_style="red"))
             return
             
         avg_score_color = "green" if summary.get("avg_score", 0) >= 80 else "yellow" if summary.get("avg_score", 0) >= 55 else "red"
@@ -558,7 +558,7 @@ class OS3Tui(App):
 
     def trigger_sync(self):
         container = self.query_one("#status-container", StatusReport)
-        container.update(Panel("⏳ Forcing cache synchronization...", border_style="yellow"))
+        container.update(Panel("Forcing cache synchronization...", border_style="yellow"))
         self.run_sync()
 
     @work(exclusive=True, thread=True)

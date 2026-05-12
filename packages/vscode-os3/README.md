@@ -2,7 +2,7 @@
 
 Bring the power of **Open-Source Security Score (OS³)** directly into your editor. Stop malicious and vulnerable packages at **Intent-Time**.
 
-## 🛡️ Features
+## Features
 
 - **Inline Security Scoring**: Hover over any import statement in Python, JS/TS, or Maven to see real-time safety scores.
 - **Deep Explanations**: Understand *why* a package is risky (CVEs, Maintainer Activity, Transitive Depth).
@@ -10,7 +10,7 @@ Bring the power of **Open-Source Security Score (OS³)** directly into your edit
 - **Quick Fixes**: Suppress known false positives or automatically run scans.
 - **Artifact Scanning**: Automatically scans `package.json`, `requirements.txt`, and `pom.xml` on save.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Install OS³ CLI
 Ensure you have the OS³ CLI installed on your system:
@@ -32,7 +32,7 @@ npx vsce package
 ```
 Then, in VS Code, go to Extensions → `...` → `Install from VSIX...`.
 
-## ⚙️ Configuration
+## Configuration
 
 - `os3.warnIfScoreBelow`: Score threshold for warnings (default: 70).
 - `os3.errorIfScoreBelow`: Score threshold for errors (default: 40).

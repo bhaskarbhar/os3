@@ -325,7 +325,7 @@ class ScoringEngine:
             stale = cache.get_cached_score(ecosystem, name, version, allow_stale=True)
             if stale:
                 stale["source"] = "cache (offline)"
-                stale["explanations"].append("⚠️ Network error: Showing cached data which may be stale.")
+                stale["explanations"].append("Network error: Showing cached data which may be stale.")
                 return stale
             else:
                 raise Exception("Network error and no cached data available.")

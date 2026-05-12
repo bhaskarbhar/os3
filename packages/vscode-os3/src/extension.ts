@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     const diagnostics = vscode.languages.createDiagnosticCollection('os3');
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 
-    statusBar.text = "🛡 OS3 Ready";
+    statusBar.text = "OS3 Ready";
     statusBar.show();
 
     // Hover Provider
@@ -73,14 +73,14 @@ export function activate(context: vscode.ExtensionContext) {
     // Commands
     context.subscriptions.push(
         vscode.commands.registerCommand('os3.sync', async () => {
-            statusBar.text = "🔄 OS3 Syncing...";
+            statusBar.text = "OS3 Syncing...";
             try {
                 await execCLI('sync');
                 vscode.window.showInformationMessage("OS3 Synced");
-                statusBar.text = "🛡 OS3 Synced";
+                statusBar.text = "OS3 Synced";
             } catch (e: any) {
                 vscode.window.showErrorMessage("Sync failed: " + e.message);
-                statusBar.text = "⚠ OS3 Error";
+                statusBar.text = "OS3 Error";
             }
         })
     );
@@ -207,7 +207,7 @@ function execCLI(args: string): Promise<string> {
 function createHover(pkg: string, report: OS3Report): vscode.Hover {
     const md = new vscode.MarkdownString();
 
-    md.appendMarkdown(`### 🛡 OS3: ${pkg}\n\n`);
+    md.appendMarkdown(`### OS3: ${pkg}\n\n`);
     md.appendMarkdown(`**Score:** ${report.score}/100 (${report.risk_level})\n\n`);
 
     md.appendMarkdown(`**Findings:**\n`);

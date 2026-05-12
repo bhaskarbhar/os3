@@ -6,7 +6,7 @@ Built for the **Advanced Agentic Coding** era, OS³ integrates directly into you
 
 ---
 
-## 🚀 Quick Start & Installation
+## Quick Start & Installation
 
 ### 1. Prerequisites
 - Python 3.9+
@@ -52,5 +52,5 @@ Detailed documentation for OS³ can be found below:
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
-*Built with ❤️ by the OS³ Team.*
+*Built by the OS³ Team.*
 
